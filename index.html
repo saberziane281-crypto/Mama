@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ff6fa5">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<title>تعلّم مع ماما</title>
+<style>
+  :root {
+    --bg: #fff8ec; --card: #ffffff; --ink: #3b2a5a;
+    --pink: #ff6fa5; --blue: #4fb3ff; --green: #47c985; --yellow: #ffc83d; --purple: #a57bff;
+    --shadow: 0 8px 20px rgba(59,42,90,.15);
+  }
+  * { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; }
+  body { font-family: "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif; background: var(--bg); color: var(--ink); padding: env(safe-area-inset-top, 0) 12px env(safe-area-inset-bottom, 0); overflow-x: hidden; touch-action: manipulation; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; gap: 8px; }
+  h1 { font-size: 1.4rem; margin: 0; }
+  .stars { background: var(--yellow); color: #5a3d00; font-weight: bold; padding: 8px 14px; border-radius: 999px; box-shadow: var(--shadow); white-space: nowrap; }
+  .lock { border: none; background: var(--card); border-radius: 50%; width: 42px; height: 42px; font-size: 1.2rem; box-shadow: var(--shadow); cursor: pointer; }
+  nav { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; }
+  nav button { flex: 1 0 auto; border: none; border-radius: 16px; padding: 12px 10px; font-size: .95rem; font-weight: bold; color: #fff; cursor: pointer; box-shadow: var(--shadow); }
+  nav button:active { transform: scale(.95); }
+  nav button[aria-selected="true"] { outline: 4px solid var(--ink); outline-offset: 2px; }
+  .t-letters { background: var(--pink); } .t-animals { background: var(--green); }
+  .t-objects { background: var(--blue); } .t-write { background: var(--yellow); color: #5a3d00 !important; }
+  .t-quiz { background: var(--purple); }
+
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .tile { background: var(--card); border: none; border-radius: 20px; padding: 12px 6px; box-shadow: var(--shadow); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink); font-family: inherit; }
+  .tile:active { transform: scale(.92); }
+  .tile .emo { font-size: 2.6rem; line-height: 1; }
+  .tile .big { font-size: 2rem; font-weight: bold; color: var(--pink); line-height: 1.1; }
+  .tile .label { font-size: 1rem; font-weight: bold; }
+
+  .stage { margin: 16px auto; max-width: 440px; background: var(--card); border-radius: 28px; padding: 20px; text-align: center; box-shadow: var(--shadow); min-height: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; }
+  .emo-big { font-size: 5.5rem; line-height: 1.1; }
+  .letter-big { font-size: 6rem; font-weight: bold; color: var(--pink); line-height: 1.1; }
+  .word { font-size: 2rem; font-weight: bold; }
+  .hint { font-size: 1rem; line-height: 1.6; background: var(--bg); border-radius: 16px; padding: 10px 14px; }
+  .btn { border: none; border-radius: 999px; padding: 12px 20px; font-size: 1.05rem; font-weight: bold; color: #fff; background: var(--green); cursor: pointer; box-shadow: var(--shadow); font-family: inherit; }
+  .btn:active { transform: scale(.95); }
+  .btn.blue { background: var(--blue); } .btn.pink { background: var(--pink); } .btn.gray { background: var(--ink); }
+  .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .options { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .opt { background: var(--bg); border: 3px solid transparent; border-radius: 22px; width: 100px; height: 100px; font-size: 3rem; cursor: pointer; box-shadow: var(--shadow); }
+  .opt.right { border-color: var(--green); background: #d9ffe9; }
+  .opt.wrong { border-color: var(--pink); opacity: .6; }
+  .msg { font-size: 1.2rem; font-weight: bold; min-height: 1.6em; }
+
+  canvas#trace { width: 260px; height: 260px; max-width: 100%; background: #fffdf7; border-radius: 20px; border: 3px dashed var(--purple); touch-action: none; }
+
+  .confetti { position: fixed; top: -20px; width: 10px; height: 14px; border-radius: 3px; pointer-events: none; animation: fall 1.6s linear forwards; z-index: 99; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+  .pop { animation: pop .5s ease; }
+  @keyframes pop { 0% { transform: scale(.4); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .hidden { display: none !important; }
+  footer { text-align: center; font-size: .85rem; opacity: .7; padding: 16px 0 24px; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(30,20,50,.7); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+  .gate { background: var(--card); border-radius: 24px; padding: 22px; text-align: center; max-width: 340px; width: 100%; box-shadow: var(--shadow); }
+  .gate input { font-size: 1.4rem; width: 110px; padding: 8px; text-align: center; border-radius: 12px; border: 2px solid var(--purple); margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="lock" id="lockBtn" aria-label="قفل ولي الأمر">🔒</button>
+  <h1>🌈 تعلّم مع ماما</h1>
+  <div class="stars" id="starCount">⭐ 0</div>
+</header>
+
+<nav role="tablist">
+  <button class="t-letters" role="tab" data-tab="letters" aria-selected="true">🔤 الحروف</button>
+  <button class="t-animals" role="tab" data-tab="animals" aria-selected="false">🐶 الحيوانات</button>
+  <button class="t-objects" role="tab" data-tab="objects" aria-selected="false">🧸 الأشياء</button>
+  <button class="t-write" role="tab" data-tab="write" aria-selected="false">✏️ الكتابة</button>
+  <button class="t-quiz" role="tab" data-tab="quiz" aria-selected="false">🎯 تحدّي</button>
+</nav>
+
+<!-- تبويب الحروف والحيوانات والأشياء -->
+<section id="browse">
+  <div class="stage" id="detail">
+    <div class="emo-big" id="dEmo">👋</div>
+    <div class="letter-big hidden" id="dLetter"></div>
+    <div class="word" id="dWord">اضغطي على أي صورة</div>
+    <div class="row">
+      <button class="btn" id="replayBtn">🔊 استمعي</button>
+      <button class="btn blue hidden" id="goWrite">✏️ تعلّم كتابته</button>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- تبويب تعليم الكتابة -->
+<section id="writeSec" class="hidden">
+  <div class="stage">
+    <div class="letter-big" id="wLetter">أ</div>
+    <div class="emo-big" id="wEmo" style="font-size:3.5rem">🦁</div>
+    <div class="word" id="wWord">أسد</div>
+    <div class="hint" id="wHint"></div>
+    <div class="row">
+      <button class="btn" id="wSound">🔊 نطق الحرف</button>
+    </div>
+    <canvas id="trace" width="520" height="520"></canvas>
+    <div class="row">
+      <button class="btn gray" id="wClear">🧹 امسحي</button>
+      <button class="btn pink" id="wDone">✨ انتهيت</button>
+    </div>
+  </div>
+  <div class="grid" id="letterPicker" style="grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));"></div>
+</section>
+
+<!-- تبويب التحدي -->
+<section id="quiz" class="hidden">
+  <div class="stage">
+    <div class="msg" id="qPrompt">هل أنتِ مستعدة؟</div>
+    <button class="btn" id="qSpeak">🔊 استمعي للكلمة</button>
+    <div class="options" id="qOptions"></div>
+    <div class="msg" id="qFeedback"></div>
+    <button class="btn hidden" id="qNext">التالي ➜</button>
+  </div>
+</section>
+
+<footer>اضغطي على الصور لتسمعي الكلمة • كل إجابة صحيحة تربحك نجمة ⭐</footer>
+
+<script>
+// ---------- الحماية من الخروج بالخطأ ----------
+history.pushState({ app: true }, "");
+window.addEventListener("popstate", () => {
+  history.pushState({ app: true }, "");
+  if (!document.getElementById("gateOverlay")) toast("للخروج اطلبي من ماما 🔒");
+});
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("click", e => { if (e.target.closest("a")) e.preventDefault(); });
+
+// ---------- البيانات ----------
+// [الحرف، الكلمة، الصورة، طريقة الكتابة]
+const LETTERS = [
+  ["أ","أسد","🦁","خط مستقيم من الأعلى إلى الأسفل، ثم قوس صغير في الأعلى."],
+  ["ب","بطة","🦆","خط أفقي ينزل بعده قوس، ثم نقطة واحدة تحت الحرف."],
+  ["ت","تفاحة","🍎","مثل الباء بدون نقطة تحت، ثم نقطتان فوقه."],
+  ["ث","ثعلب","🦊","مثل التاء، ثم ثلاث نقاط فوقه."],
+  ["ج","جمل","🐫","قوس من اليمين إلى اليسار، ثم نزول للأسفل، ونقطة في المنتصف."],
+  ["ح","حصان","🐴","قوس كبير مفتوح من الأعلى، بدون نقطة."],
+  ["خ","خروف","🐑","مثل الحاء، ثم نقطة واحدة فوقه."],
+  ["د","دجاجة","🐔","قوس صغير ينزل للأسفل بدون نقطة."],
+  ["ذ","ذرة","🌽","مثل الدال، ثم نقطة واحدة فوقه."],
+  ["ر","رمان","🍈","خط منحنٍ صغير ينزل للأسفل."],
+  ["ز","زرافة","🦒","مثل الراء، ثم نقطة واحدة فوقه."],
+  ["س","سمكة","🐟","ثلاث أسنان متصلة، تبدأ من اليمين إلى اليسار."],
+  ["ش","شمس","☀️","مثل السين، ثم ثلاث نقاط فوقه."],
+  ["ص","صقر","🦅","خط مستقيم ينزل، ثم قوس صغير في الأسفل."],
+  ["ض","ضفدع","🐸","مثل الصاد، ثم نقطة واحدة فوقه."],
+  ["ط","طائرة","✈️","خط مستقيم عمودي، ثم قوس دائري صغير في الأسفل."],
+  ["ظ","ظبي","🦌","مثل الطاء، ثم نقطة واحدة فوقه."],
+  ["ع","عنب","🍇","دائرة صغيرة مفتوحة، ثم خط ينزل للأسفل."],
+  ["غ","غوريلا","🦍","مثل العين، ثم نقطة واحدة فوقه."],
+  ["ف","فراشة","🦋","دائرة صغيرة في الأعلى، ثم خط ينزل، ونقطة واحدة فوقه."],
+  ["ق","قطة","🐱","مثل الفاء، ثم نقطتان فوقه."],
+  ["ك","كرة","⚽","خط مستقيم، ثم خطان قصيران يتجهان لليمين."],
+  ["ل","ليمون","🍋","خط عمودي ينزل، ثم قوس صغير للأسفل نحو اليسار."],
+  ["م","موز","🍌","دائرة صغيرة، ثم خط ينزل منها للأسفل."],
+  ["ن","نجمة","⭐","قوس كبير مثل الكأس، ثم نقطة واحدة فوقه."],
+  ["ه","هلال","🌙","دائرة صغيرة مفتوحة، ثم خط صغير يتصل بها."],
+  ["و","وردة","🌹","دائرة صغيرة، ثم خط منحنٍ ينزل للأسفل."],
+  ["ي","يمامة","🕊️","ثلاث أسنان متصلة، ثم نقطتان تحته."]
+];
+
+const ANIMALS = [
+  { l:"أ", w:"أسد",     e:"🦁", s:"رررررو" },
+  { l:"ب", w:"بقرة",    e:"🐄", s:"مووووو" },
+  { l:"ت", w:"تمساح",   e:"🐊", s:"طق طق" },
+  { l:"ث", w:"ثعلب",    e:"🦊", s:"ينغ ينغ" },
+  { l:"ج", w:"جمل",     e:"🐫", s:"غرغر" },
+  { l:"ح", w:"حصان",    e:"🐴", s:"هيهيهي" },
+  { l:"خ", w:"خروف",    e:"🐑", s:"ماااع" },
+  { l:"د", w:"دب",      e:"🐻", s:"غررر" },
+  { l:"ذ", w:"ذئب",     e:"🐺", s:"أووو" },
+  { l:"ر", w:"رنة",     e:"🦌", s:"ترين ترين" },
+  { l:"ز", w:"زرافة",   e:"🦒", s:"هممم" },
+  { l:"س", w:"سمكة",    e:"🐟", s:"بلوب بلوب" },
+  { l:"ش", w:"شيتا",    e:"🐆", s:"فررررر" },
+  { l:"ص", w:"صقر",     e:"🦅", s:"كيييي" },
+  { l:"ض", w:"ضفدع",    e:"🐸", s:"كرو كرو" },
+  { l:"ط", w:"طاووس",   e:"🦚", s:"هووووو" },
+  { l:"ظ", w:"ظربان",   e:"🦡", s:"خخخخ" },
+  { l:"ع", w:"عصفور",   e:"🐦", s:"تشيب تشيب" },
+  { l:"غ", w:"غوريلا",  e:"🦍", s:"هوو هوو" },
+  { l:"ف", w:"فيل",     e:"🐘", s:"توووت" },
+  { l:"ق", w:"قرد",     e:"🐒", s:"اوو اوو" },
+  { l:"ك", w:"كلب",     e:"🐶", s:"هوف هوف" },
+  { l:"ل", w:"لاما",    e:"🦙", s:"ممممم" },
+  { l:"م", w:"ماعز",    e:"🐐", s:"مااا" },
+  { l:"ن", w:"نحلة",    e:"🐝", s:"زززززز" },
+  { l:"ه", w:"هرة",     e:"🐈", s:"مياو" },
+  { l:"و", w:"وطواط",   e:"🦇", s:"ئيك ئيك" },
+  { l:"ي", w:"يمامة",   e:"🕊️", s:"هوو هوو" }
+];
+const OBJECTS = [
+  { l:"أ", w:"أتوبيس",  e:"🚌" }, { l:"ب", w:"بيت",     e:"🏠" },
+  { l:"ت", w:"تلفاز",   e:"📺" }, { l:"ث", w:"ثلاجة",   e:"🧊" },
+  { l:"ج", w:"جرس",     e:"🔔" }, { l:"ح", w:"حقيبة",   e:"👜" },
+  { l:"خ", w:"خيمة",    e:"⛺" }, { l:"د", w:"دراجة",   e:"🚲" },
+  { l:"ذ", w:"ذهب",     e:"🪙" }, { l:"ر", w:"راديو",   e:"📻" },
+  { l:"ز", w:"زهرة",    e:"🌸" }, { l:"س", w:"ساعة",    e:"⏰" },
+  { l:"ش", w:"شمعة",    e:"🕯️" }, { l:"ص", w:"صندوق",   e:"📦" },
+  { l:"ض", w:"ضوء",     e:"💡" }, { l:"ط", w:"طبق",     e:"🍽️" },
+  { l:"ظ", w:"ظرف",     e:"✉️" }, { l:"ع", w:"علم",     e:"🚩" },
+  { l:"غ", w:"غيمة",    e:"☁️" }, { l:"ف", w:"فنجان",   e:"☕" },
+  { l:"ق", w:"قلم",     e:"✏️" }, { l:"ك", w:"كرسي",    e:"🪑" },
+  { l:"ل", w:"لعبة",    e:"🎲" }, { l:"م", w:"مفتاح",   e:"🔑" },
+  { l:"ن", w:"نظارة",   e:"👓" }, { l:"ه", w:"هاتف",    e:"📱" },
+  { l:"و", w:"ورقة",    e:"📄" }, { l:"ي", w:"يد",      e:"✋" }
+];
+
+const COLORS = ["#ff6fa5","#4fb3ff","#47c985","#ffc83d","#a57bff","#ff9f43"];
+const PRAISE = ["ممتاز يا بطلة! 🌟","أحسنتِ! أنتِ نجمة ⭐","رائع جداً! 🎉","واو! أنتِ ذكية 💖","برافو عليكِ! 👏"];
+const TRY = ["حاولي مرة أخرى، أنتِ تقدرين 💪","قريبة جداً! جربي ثانية 😊","لا بأس، نتعلم معاً 🌈"];
+
+// ---------- النجوم ----------
+let stars = 0;
+function addStar(){ stars++; document.getElementById("starCount").textContent = "⭐ " + stars; }
+
+// ---------- الصوت ----------
+let arVoice = null;
+function pickVoice(){
+  if (!("speechSynthesis" in window)) return;
+  arVoice = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith("ar")) || null;
+}
+if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speakRaw(text, rate = 0.8, pitch = 1.3){
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ar-SA"; u.rate = rate; u.pitch = pitch;
+  if (arVoice) u.voice = arVoice;
+  speechSynthesis.speak(u);
+}
+const speak = t => speakRaw(t);
+
+let audioCtx = null;
+function tones(list, type = "triangle", gap = 0.12){
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    list.forEach((f, i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = type; o.frequency.value = f; o.connect(g); g.connect(audioCtx.destination);
+      const t = audioCtx.currentTime + i * gap;
+      g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      o.start(t); o.stop(t + 0.32);
+    });
+  } catch(e){}
+}
+// تصفيق عند النجاح
+function applause(){
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const sr = audioCtx.sampleRate;
+    const buf = audioCtx.createBuffer(1, Math.floor(sr * 2.2), sr);
+    const d = buf.getChannelData(0);
+    for (let c = 0; c < 30; c++) {
+      const start = Math.floor((c * 0.06 + Math.random() * 0.03) * sr);
+      for (let i = 0; i < sr * 0.05 && start + i < d.length; i++) {
+        d[start + i] += (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.008)) * 0.8;
+      }
+    }
+    const src = audioCtx.createBufferSource(); src.buffer = buf;
+    const bp = audioCtx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1800; bp.Q.value = 0.7;
+    const g = audioCtx.createGain(); g.gain.value = 0.9;
+    src.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
+    src.start();
+  } catch(e){}
+}
+function cheerSound(){
+  applause();
+  setTimeout(() => speakRaw("برافو يا بطلة! أنتِ رائعة", 0.9, 1.4), 400);
+}
+
+// صوت حزين مع بكاء عند الخطأ
+function oopsSound(){
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    const lfo = audioCtx.createOscillator(), lg = audioCtx.createGain();
+    o.type = "sawtooth";
+    o.frequency.setValueAtTime(420, t0);
+    o.frequency.linearRampToValueAtTime(240, t0 + 1.4);
+    lfo.frequency.value = 6; lg.gain.value = 18;
+    lfo.connect(lg); lg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(0.15, t0 + 0.1);
+    g.gain.linearRampToValueAtTime(0.0001, t0 + 1.6);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t0); lfo.start(t0); o.stop(t0 + 1.6); lfo.stop(t0 + 1.6);
+  } catch(e){}
+}
+
+function confetti(){
+  for (let i = 0; i < 40; i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random()*100 + "vw";
+    c.style.background = COLORS[i % COLORS.length];
+    c.style.animationDelay = Math.random()*.3 + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 2000);
+  }
+}
+function celebrate(msg){ addStar(); cheerSound(); confetti(); return msg; }
+
+let toastTimer = null;
+function toast(text){
+  const d = document.getElementById("dWord");
+  d.textContent = text;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { if (d.textContent === text) d.textContent = current ? current.w : "اضغطي على أي صورة"; }, 2500);
+}
+
+// ---------- التبويب: الحروف / الحيوانات / الأشياء ----------
+const grid = document.getElementById("grid");
+const dEmo = document.getElementById("dEmo");
+const dLetter = document.getElementById("dLetter");
+const dWord = document.getElementById("dWord");
+const replayBtn = document.getElementById("replayBtn");
+const goWrite = document.getElementById("goWrite");
+let current = null;
+
+function showItem(item, tab){
+  current = item;
+  dEmo.textContent = item.e;
+  dEmo.classList.remove("pop"); void dEmo.offsetWidth; dEmo.classList.add("pop");
+  dWord.textContent = item.w;
+  if (tab === "letters") {
+    dLetter.textContent = item.l; dLetter.classList.remove("hidden");
+    goWrite.classList.remove("hidden");
+    speak("الحرف " + item.l + " ... " + item.w);
+  } else {
+    dLetter.classList.add("hidden"); goWrite.classList.add("hidden");
+    if (tab === "animals") {
+      dLetter.textContent = item.l; dLetter.classList.remove("hidden");
+      // الحيوان يصدر صوته ثم يقول اسمه
+      speakRaw(item.s, 0.6, 1.6);
+      setTimeout(() => speakRaw(item.w, 0.8, 1.3), 1800);
+    } else {
+      dLetter.textContent = item.l; dLetter.classList.remove("hidden");
+      speak(item.w);
+    }
+  }
+}
+replayBtn.onclick = () => current && (current.s ? speakRaw(current.s, 0.6, 1.6) : speak(current.w));
+goWrite.onclick = () => current && openWrite(current.l);
+
+let currentTab = "letters";
+function renderGrid(tab){
+  currentTab = tab;
+  grid.innerHTML = "";
+  const list = tab === "letters" ? LETTERS.map(([l,w,e]) => ({ l, w, e }))
+             : tab === "animals" ? ANIMALS : OBJECTS;
+  list.forEach((item, i) => {
+    const b = document.createElement("button");
+    b.className = "tile";
+    b.style.borderBottom = "6px solid " + COLORS[i % COLORS.length];
+    if (tab === "letters") {
+      b.innerHTML = `<span class="big">${item.l}</span><span class="emo">${item.e}</span><span class="label">${item.w}</span>`;
+    } else {
+      // الحيوانات والأشياء: الصورة ثم الحرف الرئيسي تحتها
+      b.innerHTML = `<span class="emo">${item.e}</span><span class="big" style="font-size:1.5rem">${item.l}</span><span class="label">${item.w}</span>`;
+    }
+    b.onclick = () => showItem(item, tab);
+    grid.appendChild(b);
+  });
+}
+
+// ---------- تعليم الكتابة ----------
+const writeSec = document.getElementById("writeSec");
+const wLetter = document.getElementById("wLetter");
+const wEmo = document.getElementById("wEmo");
+const wWord = document.getElementById("wWord");
+const wHint = document.getElementById("wHint");
+const canvas = document.getElementById("trace");
+const ctx = canvas.getContext("2d");
+let writeLetter = null;
+let drawing = false, last = null;
+
+function drawGuide(){
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.font = "340px 'Noto Naskh Arabic', 'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(160,140,200,.28)";
+  ctx.fillText(writeLetter[0], w/2, h/2 + 10);
+}
+function openWrite(letter){
+  const row = LETTERS.find(x => x[0] === letter) || LETTERS[0];
+  writeLetter = row;
+  wLetter.textContent = row[0];
+  wEmo.textContent = row[2];
+  wWord.textContent = row[1];
+  wHint.textContent = "✏️ طريقة الكتابة: " + row[3];
+  drawGuide();
+  document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab === "write" ? "true" : "false"));
+  document.getElementById("browse").classList.add("hidden");
+  document.getElementById("quiz").classList.add("hidden");
+  writeSec.classList.remove("hidden");
+  renderPicker();
+  speak("الحرف " + row[0] + " ... " + row[1]);
+}
+function renderPicker(){
+  const p = document.getElementById("letterPicker");
+  p.innerHTML = "";
+  LETTERS.forEach(([l], i) => {
+    const b = document.createElement("button");
+    b.className = "tile";
+    b.style.padding = "8px 2px";
+    b.style.borderBottom = "5px solid " + COLORS[i % COLORS.length];
+    b.innerHTML = `<span class="big" style="font-size:1.6rem">${l}</span>`;
+    b.onclick = () => openWrite(l);
+    p.appendChild(b);
+  });
+}
+document.getElementById("wSound").onclick = () => writeLetter && speak("الحرف " + writeLetter[0] + " ... " + writeLetter[1]);
+document.getElementById("wClear").onclick = () => drawGuide();
+
+function pos(e){
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * canvas.width / r.width, y: (e.clientY - r.top) * canvas.height / r.height };
+}
+canvas.addEventListener("pointerdown", e => { drawing = true; last = pos(e); canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener("pointermove", e => {
+  if (!drawing) return;
+  const p = pos(e);
+  ctx.strokeStyle = "#ff6fa5"; ctx.lineWidth = 18; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+  last = p;
+});
+["pointerup","pointercancel","pointerleave"].forEach(ev => canvas.addEventListener(ev, () => drawing = false));
+
+document.getElementById("wDone").onclick = () => {
+  const msg = celebrate(PRAISE[Math.floor(Math.random()*PRAISE.length)]);
+  speak(msg.replace(/[^\u0600-\u06FF\s!،]/g, ""));
+  setTimeout(() => drawGuide(), 1500);
+};
+
+// ---------- التحدي ----------
+const qPrompt = document.getElementById("qPrompt");
+const qOptions = document.getElementById("qOptions");
+const qFeedback = document.getElementById("qFeedback");
+const qNext = document.getElementById("qNext");
+let target = null, answered = false;
+const shuffle = a => a.map(v => [Math.random(), v]).sort((x,y) => x[0]-y[0]).map(x => x[1]);
+
+function nextQuestion(){
+  answered = false;
+  qFeedback.textContent = "";
+  qNext.classList.add("hidden");
+  const pool = [...ANIMALS, ...OBJECTS];
+  target = pool[Math.floor(Math.random()*pool.length)];
+  const wrong = shuffle(pool.filter(p => p.w !== target.w)).slice(0,2);
+  qPrompt.textContent = "أين ⟵ " + target.w + " ؟";
+  qOptions.innerHTML = "";
+  shuffle([target, ...wrong]).forEach(o => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.textContent = o.e;
+    b.onclick = () => choose(b, o);
+    qOptions.appendChild(b);
+  });
+  setTimeout(() => speak("أين " + target.w + "؟"), 300);
+}
+function choose(btn, opt){
+  if (answered) return;
+  if (opt.w === target.w){
+    answered = true;
+    btn.classList.add("right");
+    qFeedback.textContent = celebrate(PRAISE[Math.floor(Math.random()*PRAISE.length)]);
+    qNext.classList.remove("hidden");
+  } else {
+    btn.classList.add("wrong");
+    oopsSound();
+    qFeedback.textContent = TRY[Math.floor(Math.random()*TRY.length)];
+    speak("حاولي مرة أخرى");
+  }
+}
+document.getElementById("qSpeak").onclick = () => target && speak(target.w);
+qNext.onclick = nextQuestion;
+
+// ---------- التنقل بين التبويبات ----------
+const tabs = document.querySelectorAll("nav button");
+function showTab(tab){
+  tabs.forEach(x => x.setAttribute("aria-selected", x.dataset.tab === tab ? "true" : "false"));
+  document.getElementById("browse").classList.add("hidden");
+  document.getElementById("quiz").classList.add("hidden");
+  writeSec.classList.add("hidden");
+  if (tab === "quiz") {
+    document.getElementById("quiz").classList.remove("hidden");
+    nextQuestion();
+  } else if (tab === "write") {
+    openWrite(writeLetter ? writeLetter[0] : "أ");
+  } else {
+    document.getElementById("browse").classList.remove("hidden");
+    renderGrid(tab);
+    current = null;
+    dEmo.textContent = "👋"; dLetter.classList.add("hidden"); goWrite.classList.add("hidden");
+    dWord.textContent = "اضغطي على أي صورة";
+  }
+}
+tabs.forEach(t => t.onclick = () => showTab(t.dataset.tab));
+
+// ---------- قفل ولي الأمر ----------
+let gateAnswer = 0;
+document.getElementById("lockBtn").onclick = () => {
+  const a = 6 + Math.floor(Math.random()*7), b = 6 + Math.floor(Math.random()*7);
+  gateAnswer = a * b;
+  const ov = document.createElement("div");
+  ov.className = "overlay"; ov.id = "gateOverlay";
+  ov.innerHTML = `<div class="gate">
+      <h2>🔒 للوالدين فقط</h2>
+      <div>كم حاصل ${a} × ${b} ؟</div>
+      <input id="gateInput" type="number" inputmode="numeric" autocomplete="off">
+      <div class="row">
+        <button class="btn" id="gateOk">تأكيد</button>
+        <button class="btn gray" id="gateCancel">رجوع</button>
+      </div>
+      <div class="msg" id="gateMsg"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const input = document.getElementById("gateInput");
+  input.focus();
+  document.getElementById("gateCancel").onclick = () => ov.remove();
+  document.getElementById("gateOk").onclick = () => {
+    if (Number(input.value) === gateAnswer) {
+      ov.remove();
+      toast("للخروج: اضغطي زر الرئيسية في الهاتف ثم أغلقي التطبيق 👋");
+    } else {
+      document.getElementById("gateMsg").textContent = "الإجابة غير صحيحة، حاولي مرة أخرى";
+    }
+  };
+};
+
+// ---------- البداية ----------
+renderGrid("letters");
+</script>
+</body>
+</html>
